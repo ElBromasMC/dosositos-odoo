@@ -1,0 +1,44 @@
+networks:
+  store_network:
+    external: false
+
+services:
+  db:
+    image: postgres:15-alpine
+    restart: always
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    networks:
+      - store_network
+    expose:
+      - 5432
+    healthcheck:
+      test: [ "CMD", "pg_isready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  web:
+    image: odoo:18.0
+    restart: unless-stopped
+    volumes:
+      - odoo-web-data:/var/lib/odoo
+    environment:
+      - HOST=db
+      - USER=${DB_USER}
+      - PASSWORD=${DB_PASSWORD}
+    ports:
+      - "8069:8069"
+    networks:
+      - store_network
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db-data:
+  odoo-web-data:
+

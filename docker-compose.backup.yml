@@ -1,0 +1,38 @@
+services:
+  backup:
+    image: alpine
+    volumes:
+      - type: bind
+        source: ./scripts/backup.sh
+        target: /backup.sh
+        read_only: true
+      - ./backup:/backup
+      # Volumes to backup
+      - db-data:/mnt/db-data
+      - odoo-web-data:/mnt/odoo-web-data
+    environment:
+      - BACKUP_ROOT=/backup
+    command: >
+      sh -c "/backup.sh
+      db-data '/mnt/db-data'
+      odoo-web-data '/mnt/odoo-web-data'
+      "
+  restore:
+    image: alpine
+    volumes:
+      - type: bind
+        source: ./scripts/restore.sh
+        target: /restore.sh
+        read_only: true
+      - ./backup:/backup
+      # Volumes to restore
+      - db-data:/mnt/db-data
+      - odoo-web-data:/mnt/odoo-web-data
+    environment:
+      - BACKUP_ROOT=/backup
+    command: >
+      sh -c "/restore.sh
+      db-data '/mnt/db-data'
+      odoo-web-data '/mnt/odoo-web-data'
+      "
+
